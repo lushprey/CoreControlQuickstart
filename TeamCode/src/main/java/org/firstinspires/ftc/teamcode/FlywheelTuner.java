@@ -3,10 +3,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.Systems.Flywheel;
+
 @TeleOp
 public class FlywheelTuner extends OpMode {
 
-    Flywheel flywheel = new Flywheel();
+    Flywheel flywheel;
 
     public double[] k = {0, 0, 0};
 
@@ -17,7 +19,7 @@ public class FlywheelTuner extends OpMode {
     double[] increments = {0.000001, 0.00001, 0.0001, 0.001, 0.01};
     int incrementIndex = 4;
     int kIndex = S;
-    String kMode;
+    String kMode; //Para telemetria
 
     double targetRPM = 0;
     double idealRPM; //Por definir
@@ -25,10 +27,9 @@ public class FlywheelTuner extends OpMode {
     double currentRPM;
     double error;
 
-
     @Override
     public void init() {
-        flywheel.init(hardwareMap);
+        flywheel = Flywheel.getInstance(hardwareMap);
     }
 
     @Override
@@ -53,10 +54,13 @@ public class FlywheelTuner extends OpMode {
         if (gamepad1.leftTriggerWasPressed()) { targetRPM -= stepRPM; }
         if (gamepad1.rightTriggerWasPressed()) { targetRPM += stepRPM; }
 
-        currentRPM = flywheel.getRPM();
-        error = targetRPM - currentRPM;
+        flywheel.setkP(k[P]);
+        flywheel.setkV(k[V]);
+        flywheel.setkS(k[S]);
 
-        flywheel.setMotorPower(k[S] + (k[V] * targetRPM) + (k[P] * error));
+        currentRPM = flywheel.getRPM();
+
+        flywheel.PVS(targetRPM, currentRPM);
 
 
         if (kIndex == S){kMode = "S";}
@@ -66,9 +70,9 @@ public class FlywheelTuner extends OpMode {
         telemetry.addData("Step", "%.6f", step);
         telemetry.addLine();
         telemetry.addData("Current Mode", kMode);
-        telemetry.addData("kS","%.6f", k[S]);
-        telemetry.addData("kV","%.6f", k[V]);
-        telemetry.addData("kP","%.6f", k[P]);
+        telemetry.addData("kS","%.6f", flywheel.getkS());
+        telemetry.addData("kV","%.6f", flywheel.getkV());
+        telemetry.addData("kP","%.6f", flywheel.getkP());
         telemetry.addLine();
         telemetry.addData("RPM","%.6f", currentRPM);
         telemetry.addData("Target RPM","%.6f", targetRPM);
